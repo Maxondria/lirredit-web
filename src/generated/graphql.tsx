@@ -50,6 +50,7 @@ export type Mutation = {
   deletePost: Scalars["Boolean"];
   register: UserResponse;
   login: UserResponse;
+  logout: Scalars["Boolean"];
 };
 
 export type MutationCreatePostArgs = {
@@ -90,6 +91,11 @@ export type RegisterLoginInput = {
   password: Scalars["String"];
 };
 
+export type PostSnippetFragment = { __typename?: "Post" } & Pick<
+  Post,
+  "id" | "title" | "createdAt" | "updatedAt"
+>;
+
 export type RegularErrorFragment = { __typename?: "FieldError" } & Pick<
   FieldError,
   "field" | "message"
@@ -113,6 +119,13 @@ export type LoginMutation = { __typename?: "Mutation" } & {
   login: { __typename?: "UserResponse" } & RegularUserResponseFragment;
 };
 
+export type LogoutMutationVariables = Exact<{ [key: string]: never }>;
+
+export type LogoutMutation = { __typename?: "Mutation" } & Pick<
+  Mutation,
+  "logout"
+>;
+
 export type RegisterMutationVariables = Exact<{
   registerInput: RegisterLoginInput;
 }>;
@@ -127,6 +140,20 @@ export type MeQuery = { __typename?: "Query" } & {
   me?: Maybe<{ __typename?: "User" } & RegularUserFragment>;
 };
 
+export type PostsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type PostsQuery = { __typename?: "Query" } & {
+  posts: Array<{ __typename?: "Post" } & PostSnippetFragment>;
+};
+
+export const PostSnippetFragmentDoc = gql`
+  fragment PostSnippet on Post {
+    id
+    title
+    createdAt
+    updatedAt
+  }
+`;
 export const RegularErrorFragmentDoc = gql`
   fragment RegularError on FieldError {
     field
@@ -166,6 +193,18 @@ export function useLoginMutation() {
   return Urql.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument);
 }
 
+export const LogoutDocument = gql`
+  mutation Logout {
+    logout
+  }
+`;
+
+export function useLogoutMutation() {
+  return Urql.useMutation<LogoutMutation, LogoutMutationVariables>(
+    LogoutDocument
+  );
+}
+
 export const RegisterDocument = gql`
   mutation Register($registerInput: RegisterLoginInput!) {
     register(registerInput: $registerInput) {
@@ -194,4 +233,19 @@ export function useMeQuery(
   options: Omit<Urql.UseQueryArgs<MeQueryVariables>, "query"> = {}
 ) {
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
+}
+
+export const PostsDocument = gql`
+  query Posts {
+    posts {
+      ...PostSnippet
+    }
+  }
+  ${PostSnippetFragmentDoc}
+`;
+
+export function usePostsQuery(
+  options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, "query"> = {}
+) {
+  return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
 }
